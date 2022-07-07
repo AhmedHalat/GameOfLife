@@ -1,6 +1,9 @@
+from glob import glob
 import random
 import time
 import pygame
+
+import cv2
 
 pygame.init()
 
@@ -23,6 +26,41 @@ tiles = []
 
 grid = [[0 for x in range(grid_width)] for y in range(grid_height)]
 backup_grid = [[0 for _ in range(grid_width)] for _ in range(grid_height)]
+
+def get_image():
+	# TODO: Clean up
+	global grid
+	global backup_grid
+	global grid_width
+	global grid_height
+
+	originalImage = cv2.imread(
+		'/Users/ahalat/Downloads/test.jpg')
+	grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+
+	(_, blackAndWhiteImage) = cv2.threshold(grayImage, 100, 255, cv2.THRESH_BINARY)
+
+	width = blackAndWhiteImage.shape[1]
+	height = blackAndWhiteImage.shape[0]
+
+	grid_width = int(width/tile_size)
+	grid_height = int(height/tile_size)
+
+	grid = [row[:] for row in blackAndWhiteImage]
+	backup_grid = [row[:] for row in blackAndWhiteImage]
+
+	# loop over the image
+	for x in range(0, height, tile_size):
+		for y in range(0, width, tile_size):
+			if blackAndWhiteImage[x][y] == 0:
+				grid[int(x/tile_size)][int(y/tile_size)] = 1
+				backup_grid[int(x/tile_size)][int(y/tile_size)] = 1
+			else:
+				grid[int(x/tile_size)][int(y/tile_size)] = 0
+				backup_grid[int(x/tile_size)][int(y/tile_size)] = 0
+
+	screen = pygame.display.set_mode((width , height))
+	screen.fill(display_color)
 
 def grid_lines():
 	# Drawing the Lines for each grid box
@@ -109,13 +147,17 @@ if __name__ == '__main__':
 	# clock = pygame.time.Clock()
 	running = True
 
-	initialize_state()
+	get_image()
+
+	# initialize_state()
 	# initialize_osilator()
 	# initialize_glider()
 	draw_grid()
 	grid_lines()
 	pygame.display.flip()
 	first = True
+
+	time.sleep(2)
 
 	while running:
 		for event in pygame.event.get():
@@ -131,6 +173,6 @@ if __name__ == '__main__':
 		draw_grid()
 		grid_lines()
 		pygame.display.flip()
-		time.sleep(0.2)
+		time.sleep(0.1)
 
 	pygame.quit()
